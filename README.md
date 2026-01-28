@@ -1,4 +1,5 @@
 # ERADICATE2
+
 ```
 usage: ./ERADICATE2 [OPTIONS]
 
@@ -18,6 +19,7 @@ usage: ./ERADICATE2 [OPTIONS]
     --letters               Score on letters anywhere in hash.
     --numbers               Score on numbers anywhere in hash.
     --mirror                Score on mirroring from center.
+    --edge-mirror           Score on mirroring from edges.
     --leading-doubles       Score on hashes leading with hexadecimal pairs
 
   Modes with arguments:
