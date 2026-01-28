@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef HPP_HEXADECIMAL
 #define HPP_HEXADECIMAL
 

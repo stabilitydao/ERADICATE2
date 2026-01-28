@@ -1,5 +1,5 @@
 enum ModeFunction {
-	Benchmark, ZeroBytes, Matching, Leading, Range, Mirror, Doubles, LeadingRange
+	Benchmark, ZeroBytes, Matching, Leading, Range, Mirror, Doubles, LeadingRange, EdgeMirror
 };
 
 typedef struct {
@@ -23,6 +23,7 @@ void eradicate2_score_matching(const uchar * const hash, __global result * const
 void eradicate2_score_range(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round);
 void eradicate2_score_leadingrange(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round);
 void eradicate2_score_mirror(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round);
+void eradicate2_score_edgemirror(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round);
 void eradicate2_score_doubles(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round);
 
 __kernel void eradicate2_iterate(__global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round) {
@@ -41,7 +42,7 @@ __kernel void eradicate2_iterate(__global result * const pResult, __global const
 	sha3_keccakf(&h);
 
 	/* enum class ModeFunction {
-	 *      Benchmark, ZeroBytes, Matching, Leading, Range, Mirror, Doubles, LeadingRange
+	 *      Benchmark, ZeroBytes, Matching, Leading, Range, Mirror, Doubles, LeadingRange, EdgeMirror
 	 * };
 	 */
 	switch (pMode->function) {
@@ -75,6 +76,10 @@ __kernel void eradicate2_iterate(__global result * const pResult, __global const
 
 	case LeadingRange:
 		eradicate2_score_leadingrange(h.b + 12, pResult, pMode, scoreMax, deviceIndex, round);
+		break;
+	
+	case EdgeMirror:
+		eradicate2_score_edgemirror(h.b + 12, pResult, pMode, scoreMax, deviceIndex, round);
 		break;
 	}
 }
@@ -199,6 +204,70 @@ void eradicate2_score_leadingrange(const uchar * const hash, __global result * c
 	}
 
 	eradicate2_result_update(hash, pResult, score, scoreMax, deviceIndex, round);
+}
+
+void eradicate2_score_edgemirror(
+    const uchar * const hash,
+    __global result * const pResult,
+    __global const mode * const pMode,
+    const uchar scoreMax,
+    const uint deviceIndex,
+    const uint round
+) {
+    int score = 0;
+
+    const uchar firstNibble = (hash[0] >> 4) & 0x0F;
+    const uchar lastNibble  = hash[19] & 0x0F;
+
+    if (firstNibble != lastNibble) {
+        eradicate2_result_update(hash, pResult, 0, scoreMax, deviceIndex, round);
+        return;
+    }
+
+    int leftCount  = 0;
+    int rightCount = 0;
+
+    for (int i = 0; i < 20; ++i) {
+        uchar high = (hash[i] >> 4) & 0x0F;
+        uchar low  = hash[i] & 0x0F;
+
+        if (high == firstNibble) {
+            ++leftCount;
+        } else {
+            break;
+        }
+
+        if (low == firstNibble) {
+            ++leftCount;
+        } else {
+            break;
+        }
+    }
+
+    for (int i = 19; i >= 0; --i) {
+        uchar low  = hash[i] & 0x0F;
+        uchar high = (hash[i] >> 4) & 0x0F;
+
+        if (low == firstNibble) {
+            ++rightCount;
+        } else {
+            break;
+        }
+
+        if (high == firstNibble) {
+            ++rightCount;
+        } else {
+            break;
+        }
+    }
+
+    if (leftCount == rightCount) {
+        score = leftCount;
+    } else {
+        score = 0;
+    }
+
+    eradicate2_result_update(hash, pResult, score, scoreMax, deviceIndex, round);
 }
 
 void eradicate2_score_mirror(const uchar * const hash, __global result * const pResult, __global const mode * const pMode, const uchar scoreMax, const uint deviceIndex, const uint round) {

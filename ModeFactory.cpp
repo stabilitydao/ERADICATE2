@@ -77,6 +77,13 @@ mode ModeFactory::leadingRange(const cl_uchar min, const cl_uchar max) {
 	return r;
 }
 
+mode ModeFactory::edgeMirror() {
+	mode r;
+	r.function =  ModeFunction::EdgeMirror;
+	return r;
+}
+
+
 mode ModeFactory::mirror() {
 	mode r;
 	r.function = ModeFunction::Mirror;
@@ -88,3 +95,4 @@ mode ModeFactory::doubles() {
 	r.function = ModeFunction::Doubles;
 	return r;
 }
+

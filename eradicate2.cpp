@@ -188,6 +188,7 @@ int main(int argc, char * * argv) {
 		bool bModeLeadingRange = false;
 		bool bModeRange = false;
 		bool bModeMirror = false;
+		bool bModeEdgeMirror = false;
 		bool bModeDoubles = false;
 		int rangeMin = 0;
 		int rangeMax = 0;
@@ -211,6 +212,7 @@ int main(int argc, char * * argv) {
 		argp.addSwitch('7', "range", bModeRange);
 		argp.addSwitch('8', "mirror", bModeMirror);
 		argp.addSwitch('9', "leading-doubles", bModeDoubles);
+		argp.addSwitch('E', "edge-mirror", bModeEdgeMirror);
 		argp.addSwitch('m', "min", rangeMin);
 		argp.addSwitch('M', "max", rangeMax);
 		argp.addMultiSwitch('s', "skip", vDeviceSkipIndex);
@@ -220,6 +222,7 @@ int main(int argc, char * * argv) {
 		argp.addSwitch('A', "address", strAddress);
 		argp.addSwitch('I', "init-code", strInitCode);
 		argp.addSwitch('i', "init-code-file", strInitCodeFile);
+
 
 		if (!argp.parse()) {
 			std::cout << "error: bad arguments, try again :<" << std::endl;
@@ -270,7 +273,11 @@ int main(int argc, char * * argv) {
 			mode = ModeFactory::mirror();
 		} else if (bModeDoubles) {
 			mode = ModeFactory::doubles();
-		} else {
+		}
+		else if (bModeEdgeMirror) {
+			mode = ModeFactory::edgeMirror();
+		}
+		else {
 			std::cout << g_strHelp << std::endl;
 			return 0;
 		}
